@@ -105,6 +105,7 @@ private func makeOverviewWindowItem(
                 ],
                 sectionFrame: .zero,
                 labelFrame: .zero,
+                gridFrame: .zero,
                 isActive: true
             ),
             OverviewWorkspaceSection(
@@ -113,6 +114,7 @@ private func makeOverviewWindowItem(
                 windows: [makeOverviewWindowItem(handle: h3, workspaceId: ws2, title: "C")],
                 sectionFrame: .zero,
                 labelFrame: .zero,
+                gridFrame: .zero,
                 isActive: false
             )
         ]
@@ -151,6 +153,7 @@ private func makeOverviewWindowItem(
                 ],
                 sectionFrame: .zero,
                 labelFrame: .zero,
+                gridFrame: .zero,
                 isActive: true
             )
         ]

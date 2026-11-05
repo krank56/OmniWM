@@ -74,12 +74,13 @@ final class QuakeTerminalController: NSObject, NSWindowDelegate, QuakeTerminalTa
             }
         }
         runtimeConfig.action_cb = { _, _, _ in false }
-        runtimeConfig.read_clipboard_cb = { userdata, location, state in
-            guard let userdata else { return }
+        runtimeConfig.read_clipboard_cb = { userdata, location, state, _, _, _ in
+            guard let userdata else { return GHOSTTY_CLIPBOARD_READ_UNAVAILABLE }
             DispatchQueue.main.async {
                 let controller = Unmanaged<QuakeTerminalController>.fromOpaque(userdata).takeUnretainedValue()
                 controller.readClipboard(location: location, state: state)
             }
+            return GHOSTTY_CLIPBOARD_READ_STARTED
         }
         runtimeConfig.confirm_read_clipboard_cb = { _, _, _, _ in }
         runtimeConfig.write_clipboard_cb = { userdata, location, content, len, confirm in
@@ -90,7 +91,7 @@ final class QuakeTerminalController: NSObject, NSWindowDelegate, QuakeTerminalTa
                       let dataPtr = content[i].data else { continue }
                 let mime = String(cString: mimePtr)
                 if mime == "text/plain" {
-                    plainText = String(cString: dataPtr)
+                    plainText = String(data: Data(bytes: dataPtr, count: content[i].len), encoding: .utf8)
                     break
                 }
             }
@@ -633,7 +634,24 @@ final class QuakeTerminalController: NSObject, NSWindowDelegate, QuakeTerminalTa
         let pasteboard = location == GHOSTTY_CLIPBOARD_SELECTION ? NSPasteboard(name: .find) : NSPasteboard.general
         let str = pasteboard.string(forType: .string) ?? ""
         str.withCString { ptr in
-            ghostty_surface_complete_clipboard_request(surface, ptr, state, false)
+            "text/plain".withCString { mime in
+                var content = ghostty_clipboard_content_s(
+                    mime: mime,
+                    data: ptr,
+                    len: str.utf8.count
+                )
+                withUnsafePointer(to: &content) { contentPtr in
+                    var completion = ghostty_clipboard_complete_s(
+                        contents: contentPtr,
+                        contents_len: 1,
+                        available: nil,
+                        available_len: 0,
+                        confirmed: false,
+                        remember: false
+                    )
+                    ghostty_surface_complete_clipboard_request(surface, &completion, state)
+                }
+            }
         }
     }
 

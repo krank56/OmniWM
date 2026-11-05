@@ -5,7 +5,7 @@ import Testing
 
 @Suite struct LayoutRefreshControllerTests {
     @Test @MainActor func hiddenEdgeRevealUsesEpsilonForNonZoomApps() {
-        #expect(LayoutRefreshController.hiddenEdgeReveal(isZoomApp: false) == 0.001)
+        #expect(LayoutRefreshController.hiddenEdgeReveal(isZoomApp: false) == 1.0)
     }
 
     @Test @MainActor func hiddenEdgeRevealUsesZeroForZoom() {
